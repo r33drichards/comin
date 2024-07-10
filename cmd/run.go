@@ -55,7 +55,15 @@ var runCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		manager := manager.New(repository, store, metrics, gitConfig.Path, cfg.Hostname, machineId)
+		manager := manager.New(
+			repository,
+			store,
+			metrics,
+			gitConfig.Path,
+			cfg.Hostname,
+			machineId,
+			cfg.Impure,
+		)
 		go poller.Poller(manager, cfg.Remotes)
 		http.Serve(manager,
 			metrics,

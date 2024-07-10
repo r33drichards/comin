@@ -99,9 +99,10 @@ type Generation struct {
 	buildErr       error     `json:"-"`
 	buildFunc      BuildFunc
 	buildCh        chan BuildResult
+	Impure         bool `json:"impure"`
 }
 
-type EvalFunc func(ctx context.Context, flakeUrl string, hostname string) (drvPath string, outPath string, machineId string, err error)
+type EvalFunc func(ctx context.Context, flakeUrl string, hostname string, impure bool) (drvPath string, outPath string, machineId string, err error)
 type BuildFunc func(ctx context.Context, drvPath string) error
 
 type BuildResult struct {
@@ -190,7 +191,7 @@ func (g Generation) Eval(ctx context.Context) Generation {
 	fn := func() {
 		ctx, cancel := context.WithTimeout(ctx, g.evalTimeout)
 		defer cancel()
-		drvPath, outPath, machineId, err := g.evalFunc(ctx, g.FlakeUrl, g.Hostname)
+		drvPath, outPath, machineId, err := g.evalFunc(ctx, g.FlakeUrl, g.Hostname, g.Impure)
 		evaluationResult := EvalResult{
 			EndAt: time.Now().UTC(),
 		}

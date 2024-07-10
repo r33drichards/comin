@@ -1,4 +1,5 @@
 hostname: machine
+impure: True
 state_dir: /var/lib/comin
 remotes:
   - name: origin

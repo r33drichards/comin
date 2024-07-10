@@ -57,9 +57,10 @@ type Manager struct {
 
 	prometheus prometheus.Prometheus
 	storage    store.Store
+	impure     bool
 }
 
-func New(r repository.Repository, s store.Store, p prometheus.Prometheus, path, hostname, machineId string) Manager {
+func New(r repository.Repository, s store.Store, p prometheus.Prometheus, path, hostname, machineId string, impure bool) Manager {
 	m := Manager{
 		repository:              r,
 		repositoryPath:          path,
@@ -77,6 +78,7 @@ func New(r repository.Repository, s store.Store, p prometheus.Prometheus, path, 
 		triggerDeploymentCh:     make(chan generation.Generation, 1),
 		prometheus:              p,
 		storage:                 s,
+		impure:                  impure,
 	}
 	if len(s.DeploymentList()) > 0 {
 		d := s.DeploymentList()[0]
@@ -93,7 +95,7 @@ func (m Manager) GetState() State {
 }
 
 func (m Manager) Fetch(remotes []string) {
-	// todo check if remote is finished building 
+	// todo check if remote is finished building
 	// if it is, then fetch
 	// if not, then wait
 	// deploymentID := panic("not implemented")

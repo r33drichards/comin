@@ -16,7 +16,7 @@ func TestEval(t *testing.T) {
 	machineId := "machine-id"
 	evalDone := make(chan struct{})
 
-	nixEvalMock := func(ctx context.Context, repositoryPath string, hostname string) (string, string, string, error) {
+	nixEvalMock := func(ctx context.Context, repositoryPath string, hostname string, impure bool) (string, string, string, error) {
 		select {
 		case <-ctx.Done():
 			return "", "", "", fmt.Errorf("timeout exceeded")

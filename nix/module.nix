@@ -3,6 +3,7 @@ overlay: { config, pkgs, lib, ... }: let
   yaml = pkgs.formats.yaml { };
   cominConfig = {
     hostname = cfg.services.comin.hostname;
+    impure = cfg.services.comin.impure;
     state_dir = "/var/lib/comin";
     remotes = cfg.services.comin.remotes;
     exporter = {

@@ -18,6 +18,13 @@
           nixosConfigurations."<hostname>".config.system.build.toplevel
         '';
       };
+      impure = mkOption {
+        type = types.bool;
+        default = false;
+        description = ''
+          Whether to run comin in impure mode.
+        '';
+      };
       exporter = mkOption {
         description = "Options for the Prometheus exporter.";
         default = {};

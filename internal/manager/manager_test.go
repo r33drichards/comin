@@ -34,7 +34,7 @@ func (r *repositoryMock) FetchAndUpdate(ctx context.Context, remoteNames []strin
 func TestRun(t *testing.T) {
 	logrus.SetLevel(logrus.DebugLevel)
 	r := newRepositoryMock()
-	m := New(r, store.New("", 1, 1), prometheus.New(), "", "", "")
+	m := New(r, store.New("", 1, 1), prometheus.New(), "", "", "", false)
 
 	evalDone := make(chan struct{})
 	buildDone := make(chan struct{})

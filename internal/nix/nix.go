@@ -19,7 +19,7 @@ import (
 // GetExpectedMachineId evals
 // nixosConfigurations.MACHINE.config.services.comin.machineId and
 // returns (machine-id, nil) is comin.machineId is set, ("", nil) otherwise.
-func getExpectedMachineId(path, hostname string) (machineId string, err error) {
+func getExpectedMachineId(path, hostname string, impure bool) (machineId string, err error) {
 	expr := fmt.Sprintf("%s#nixosConfigurations.%s.config.services.comin.machineId", path, hostname)
 	args := []string{
 		"eval",
@@ -27,7 +27,7 @@ func getExpectedMachineId(path, hostname string) (machineId string, err error) {
 		"--json",
 	}
 	var stdout bytes.Buffer
-	err = runNixCommand(args, &stdout, os.Stderr)
+	err = runNixCommand(args, &stdout, os.Stderr, impure)
 	if err != nil {
 		return
 	}
@@ -46,10 +46,12 @@ func getExpectedMachineId(path, hostname string) (machineId string, err error) {
 	return
 }
 
-func runNixCommand(args []string, stdout, stderr io.Writer) (err error) {
+func runNixCommand(args []string, stdout, stderr io.Writer, impure bool) (err error) {
 	commonArgs := []string{"--extra-experimental-features", "nix-command", "--extra-experimental-features", "flakes", "--accept-flake-config"}
 	args = append(commonArgs, args...)
-	args = append(args,  "--impure")
+	if impure {
+		args = append(args, "--impure")
+	}
 	cmdStr := fmt.Sprintf("nix %s", strings.Join(args, " "))
 	logrus.Infof("nix: running '%s'", cmdStr)
 	cmd := exec.Command("nix", args...)
@@ -62,26 +64,25 @@ func runNixCommand(args []string, stdout, stderr io.Writer) (err error) {
 	return nil
 }
 
-func Eval(ctx context.Context, flakeUrl, hostname string) (drvPath string, outPath string, machineId string, err error) {
-	drvPath, outPath, err = ShowDerivation(ctx, flakeUrl, hostname)
+func Eval(ctx context.Context, flakeUrl, hostname string, impure bool) (drvPath string, outPath string, machineId string, err error) {
+	drvPath, outPath, err = ShowDerivation(ctx, flakeUrl, hostname, impure)
 	if err != nil {
 		return
 	}
-	machineId, err = getExpectedMachineId(flakeUrl, hostname)
+	machineId, err = getExpectedMachineId(flakeUrl, hostname, impure)
 	return
 }
 
-func ShowDerivation(ctx context.Context, flakeUrl, hostname string) (drvPath string, outPath string, err error) {
+func ShowDerivation(ctx context.Context, flakeUrl, hostname string, impure bool) (drvPath string, outPath string, err error) {
 	installable := fmt.Sprintf("%s#nixosConfigurations.%s.config.system.build.toplevel", flakeUrl, hostname)
 	args := []string{
 		"show-derivation",
-		"--impure",
 		installable,
 		"-L",
 		"--show-trace",
 	}
 	var stdout bytes.Buffer
-	err = runNixCommand(args, &stdout, os.Stderr)
+	err = runNixCommand(args, &stdout, os.Stderr, impure)
 	if err != nil {
 		return
 	}

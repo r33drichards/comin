@@ -44,6 +44,7 @@ type HttpServer struct {
 
 type Configuration struct {
 	Hostname      string     `yaml:"hostname"`
+	Impure        bool       `yaml:"impure"`
 	StateDir      string     `yaml:"state_dir"`
 	StateFilepath string     `yaml:"state_filepath"`
 	Remotes       []Remote   `yaml:"remotes"`
