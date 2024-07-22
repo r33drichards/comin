@@ -154,6 +154,14 @@ func Build(ctx context.Context, drvPath string) (err error) {
 		"--impure",
 		"--no-link",
 	}
+	substituters, err := getSubstituters()
+	if err != nil {
+		fmt.Println("Failed to get substituters")
+		fmt.Println(err)
+	}
+	if substituters != nil {
+		args = append(args, substituters...)
+	}
 	err = runNixCommand(args, os.Stdout, os.Stderr)
 	if err != nil {
 		return
@@ -220,7 +228,6 @@ func getSubstituters() (substituters []string, err error) {
 		"substituters",
 		fmt.Sprintf("http://%s:5000", r.Host),
 	}, nil
-
 }
 
 // setSystemProfile creates a link into the directory
