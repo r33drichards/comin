@@ -156,7 +156,7 @@ func Build(ctx context.Context, drvPath string) (err error) {
 		"10.0.4.16:L3zGORWRhOSSPXiMG//jrswW7yAaBfwIuMcM/0pNfF0=",
 		"--option",
 		"substituters",
-		"10.0.4.16:5000",
+		"http://10.0.4.16:5000",
 	}
 	err = runNixCommand(args, os.Stdout, os.Stderr)
 	if err != nil {
