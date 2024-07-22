@@ -49,7 +49,7 @@ func getExpectedMachineId(path, hostname string) (machineId string, err error) {
 func runNixCommand(args []string, stdout, stderr io.Writer) (err error) {
 	commonArgs := []string{"--extra-experimental-features", "nix-command", "--extra-experimental-features", "flakes", "--accept-flake-config"}
 	args = append(commonArgs, args...)
-	args = append(args,  "--impure")
+	args = append(args, "--impure")
 	cmdStr := fmt.Sprintf("nix %s", strings.Join(args, " "))
 	logrus.Infof("nix: running '%s'", cmdStr)
 	cmd := exec.Command("nix", args...)
@@ -144,12 +144,20 @@ func List(flakeUrl string) (hosts []string, err error) {
 }
 
 func Build(ctx context.Context, drvPath string) (err error) {
+	// panic("todo add --option substituters http://binarycache.example.com --option trusted-public-keys binarycache.example.com:dsafdafDFW123fdasfa123124FADSAD")
 	args := []string{
 		"build",
 		fmt.Sprintf("%s^*", drvPath),
 		"-L",
 		"--impure",
-		"--no-link"}
+		"--no-link",
+		"--option",
+		"trusted-public-keys",
+		"10.0.4.16:L3zGORWRhOSSPXiMG//jrswW7yAaBfwIuMcM/0pNfF0=",
+		"--option",
+		"substituters",
+		"10.0.4.16:5000",
+	}
 	err = runNixCommand(args, os.Stdout, os.Stderr)
 	if err != nil {
 		return
