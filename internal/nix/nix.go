@@ -5,8 +5,10 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"path"
@@ -151,18 +153,74 @@ func Build(ctx context.Context, drvPath string) (err error) {
 		"-L",
 		"--impure",
 		"--no-link",
-		"--option",
-		"trusted-public-keys",
-		"10.0.4.16:L3zGORWRhOSSPXiMG//jrswW7yAaBfwIuMcM/0pNfF0=",
-		"--option",
-		"substituters",
-		"http://10.0.4.16:5000",
 	}
 	err = runNixCommand(args, os.Stdout, os.Stderr)
 	if err != nil {
 		return
 	}
 	return
+}
+
+func getSubstituters() (substituters []string, err error) {
+	userToken := os.Getenv("USER_TOKEN")
+
+	if userToken == "" {
+		return nil, errors.New("USER_TOKEN is not set")
+	}
+
+	// Prepare HTTP request to flakery.dev
+	url := "https://flakery.dev/api/v0/user/private-binary-cache/host"
+
+	req, err := http.NewRequest("GET", url, bytes.NewBuffer([]byte{}))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+string(userToken))
+	req.Header.Set("Content-Type", "application/json")
+
+	// Send HTTP request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	// Check response status
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.New("GET request failed")
+	} else {
+		fmt.Println("GET request success")
+	}
+
+	// Read and return string response
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	// return {  publickey, host: publickey.split(':')[0] }
+
+	r := struct {
+		Host      string `json:"host"`
+		PublicKey string `json:"publickey"`
+	}{}
+	err = json.Unmarshal(buf.Bytes(), &r)
+	if err != nil {
+		return nil, err
+	}
+	// "--option",
+	// "trusted-public-keys",
+	// "10.0.4.16:L3zGORWRhOSSPXiMG//jrswW7yAaBfwIuMcM/0pNfF0=",
+	// "--option",
+	// "substituters",
+	// "http://10.0.4.16:5000",
+	return []string{
+		"--option",
+		"trusted-public-keys",
+		r.PublicKey,
+		"--option",
+		"substituters",
+		fmt.Sprintf("http://%s:5000", r.Host),
+	}, nil
+
 }
 
 // setSystemProfile creates a link into the directory
